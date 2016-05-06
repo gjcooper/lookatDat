@@ -2,10 +2,13 @@
 from prespy.logfile import load
 import os, sys
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+
 exp = dict(ifffi_home='test-ifffi.log', nss_home='testsoundtiming-nss.log', ps_home='testsoundtiming-timemmn.log',
         ifffi_lab='soundtest-ifffi.log', nss_lab='soundtest-nss.log', ps_lab='soundtest-ps-timemmn.log')
 
 evts = dict(ifffi='ifffi_events.txt', nss='nss_events.txt', psr='psr_events.txt')
+mpl.rcParams['axes.formatter.useoffset'] = False
 
 
 def examine(label, times):
