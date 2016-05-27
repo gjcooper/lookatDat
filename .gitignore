@@ -1,4 +1,5 @@
 venv
+*.txt
 *.pyc
 *.swp
 *.log
