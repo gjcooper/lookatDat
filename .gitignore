@@ -1,4 +1,7 @@
 venv
+*.ev2
+*.par
+*.xlsx
 *.txt
 *.pyc
 *.swp
