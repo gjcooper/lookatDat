@@ -23,15 +23,32 @@ def load_pair(lf, ef):
     efile = load_efile(ef)
     # load codes
     pcodes = [e.code for e in pfile.events]
-    ecodes = [d[efile.evtcode] for d in efile.data]
+    ecodes = [d.code for d in efile.events]
+    for c in pcodes[:]:
+        try:
+            int(c)
+        except ValueError:
+            print('Warning: Non-number code found, cannot plot', c)
+            pcodes.remove(c)
     # load time differences between events
     ptimes = [e.time for e in pfile.events]
-    etimes = [d[efile.evttime] for d in efile.data]
+    etimes = [float(d.time) for d in efile.events]
     pdiffs = [t - ptimes[i] for i, t in enumerate(ptimes[1:])]
     ediffs = [(t - etimes[i])*1000 for i, t in enumerate(etimes[1:])]
     # Return report
-    return dict(codes=(pcodes, ecodes), diffs=(pdiffs, ediffs))
+    return dict(codes=(pcodes, ecodes), diffs=(pdiffs, ediffs), times=(ptimes, etimes))
 
+def filter_by_large(label, data, acceptrange):
+    warnings = ['{0:<9}{1:>7}{2:>12}{3!s:>12}'.format('Label', 'EvtNum', 'Value', 'Range')]
+    for i, d in enumerate(data[:]):
+        if d < acceptrange[0] or d > acceptrange[1]:
+            data.remove(d)
+            warnings.append('{0:<9}{1:>7}{2:>12.1f}{3!s:>12}'.format(label, i, d, acceptrange))
+    if len(warnings) == 1:
+        return data
+    if input(str(len(warnings)-1) + ' warnings found: Print?(Y/N)') == 'Y':
+        print('\n'.join(warnings))
+    return data
 
 def display(report):
     plt.figure(1)
@@ -43,8 +60,8 @@ def display(report):
     ax.set_title('Codes vs Event Number')
     ax = plt.subplot(212)
     d = report['diffs']
-    ax.plot(d[0], 'b--')
-    ax.plot(d[1], 'r--')
+    ax.plot(filter_by_large('logdiffs', d[0], (290, 310)), 'b--')
+    ax.plot(filter_by_large('evtdiffs', d[1], (290, 310)), 'r--')
     ax.set_title('SOA vs Event Number')
     plt.show()
 
@@ -57,7 +74,7 @@ def runfromfile(jsfile):
         print(key)
         for filepair in dirdict[key]:
             print('File Pair: ', filepair)
-            if input('Run? (Y/N)') == 'Y':
+            if input('Skip? (Y/N)') != 'Y':
                 report = load_pair(*filepair)
                 display(report)
 
