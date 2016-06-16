@@ -18,6 +18,22 @@ def compare_codes(codes, pcodes):
             break
 
 
+def codereport(pcodes, ecodes):
+    """docstring for codereport"""
+    if len(pcodes) != len(ecodes):
+        print('Warning: Length of input codes are not equal')
+    warnings = []
+    warnpattern = 'Warning: Mismatch at position {} with codes {}'
+    for i, cpair in enumerate(zip(pcodes, ecodes)):
+        if cpair[0] != cpair[1]:
+            warnings.append(warnpattern.format(i, cpair))
+    if len(warnings):
+        quest = 'Detected ' + str(len(warnings)) + ' mismatches, Show? (Y/N)'
+        resp = input(quest)
+        if resp == 'Y':
+            print('\n'.join(warnings))
+
+
 def load_pair(lf, ef):
     pfile = load(lf)
     efile = load_efile(ef)
@@ -30,25 +46,31 @@ def load_pair(lf, ef):
         except ValueError:
             print('Warning: Non-number code found, cannot plot', c)
             pcodes.remove(c)
+    codereport(pcodes, ecodes)
     # load time differences between events
     ptimes = [e.time for e in pfile.events]
     etimes = [float(d.time) for d in efile.events]
     pdiffs = [t - ptimes[i] for i, t in enumerate(ptimes[1:])]
     ediffs = [(t - etimes[i])*1000 for i, t in enumerate(etimes[1:])]
     # Return report
-    return dict(codes=(pcodes, ecodes), diffs=(pdiffs, ediffs), times=(ptimes, etimes))
+    return dict(codes=(pcodes, ecodes), diffs=(pdiffs, ediffs),
+                times=(ptimes, etimes))
+
 
 def filter_by_large(label, data, acceptrange):
-    warnings = ['{0:<9}{1:>7}{2:>12}{3!s:>12}'.format('Label', 'EvtNum', 'Value', 'Range')]
+    head = '{0:<9}{1:>7}{2:>12}{3!s:>12}'
+    cols = '{0:<9}{1:>7}{2:>12.1f}{3!s:>12}'
+    warnings = [head.format('Label', 'EvtNum', 'Value', 'Range')]
     for i, d in enumerate(data[:]):
         if d < acceptrange[0] or d > acceptrange[1]:
             data.remove(d)
-            warnings.append('{0:<9}{1:>7}{2:>12.1f}{3!s:>12}'.format(label, i, d, acceptrange))
+            warnings.append(cols.format(label, i, d, acceptrange))
     if len(warnings) == 1:
         return data
     if input(str(len(warnings)-1) + ' warnings found: Print?(Y/N)') == 'Y':
         print('\n'.join(warnings))
     return data
+
 
 def display(report):
     plt.figure(1)
